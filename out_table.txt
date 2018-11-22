@@ -1,0 +1,12 @@
+            +         -         *         /         (         )       num         $
+
+  E                                           E -> Te             E -> Te          
+
+  e  e -> +Te  e -> -Te                                  e -> #              e -> #
+
+  T                                           T -> Ft             T -> Ft          
+
+  t    t -> #    t -> #  t -> *Ft  t -> /Ft              t -> #              t -> #
+
+  F                                          F -> (E)            F -> num          
+
