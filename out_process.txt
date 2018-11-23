@@ -1,0 +1,7 @@
+   E -> Te
+   T -> Ft
+  F -> num
+     ERROR
+    t -> #
+    e -> #
+  SUCCESS!

@@ -4,8 +4,9 @@
 #include "LL1.h"
 #include <ctype.h>
 #include <fstream>
-#include <algorithm>
-#include <iomanip>
+#include <algorithm>	//find()
+#include <iomanip>		//setw()
+#include <stack>		//stack
 
 void First(const string s, vector<char>& first) {
 	char c = s.at(0);
@@ -192,13 +193,110 @@ void PrintTable(ofstream& out, string table[][MAX_Y]) {
 		out << endl << endl;
 	}
 }
+
+void Error(ofstream &out, stack<char>& stack, vector<char>::iterator& ip, bool isT) {
+	if (isT) {
+		//栈顶符号是终结符
+		stack.pop();
+	}
+	else {
+		//栈顶符号是非终结符
+		if (*ip != '$') {
+			ip--;
+		}
+	}
+	out << setw(10) << "ERROR" << endl;
+}
+
+//构造LL(1)预测分析程序
+void DoLL1(ofstream &out, vector<string> & proc, string w, string const table[][MAX_Y]) {
+	stack<char> stack;
+	stack.push('$'); stack.push('E');	//初始化将‘$’和‘S’压栈
+	vector<char> buffer{ '$' };
+	for (int i = w.length()-1; i >= 0;i--)
+		buffer.push_back(w.at(i));		//初始化将字符串w和'$'入输入缓冲区
+	vector<char>::iterator ip = buffer.end() - 1;	//ip指向输入缓冲区第一个符号
+	char x = stack.top();				//初始化x指向栈顶元素；top()不弹出栈顶元素
+	char a = *ip;						//初始化a为ip所指向的输入符号
+
+	while (x != '$') {
+		x = stack.top();
+		a = *ip;
+
+		vector<char>::iterator it = find(T.begin(), T.end(), x);
+		if ('$' == x || it != T.end()) {
+			//x是终结符或$
+			if (x == a ||(isdigit(a) && x == 'n')) {
+				stack.pop();
+				if (ip != buffer.begin()) ip--;
+			}
+			else {
+				Error(out, stack, ip, true);
+			}
+		}
+		else {
+			//x是非终结符
+				//确定table的横纵坐标
+			int x_, y_;
+			for (int i = 0; i < N.size();i++) 
+				if (x == N[i]) {
+					x_ = i;
+					break;
+				}
+			if (isdigit(a))
+				y_ = MAX_Y - 2;
+			else if (a == '$')
+				y_ = MAX_Y - 1;
+			else {
+				for (int i = 0;i<T.size();i++)
+					if (a == T[i]) {
+						y_ = i;
+						break;
+					}
+			}
+
+				//do
+			if (table[x_][y_] != " ") {
+				//表项不为空
+				stack.pop();
+				if (x_ == MAX_X - 1 && y_ == MAX_Y - 2) {
+					//F -> num
+					stack.push('n');
+					out << setw(10) << "F -> num" << endl;
+				}
+				else if (table[x_][y_].at(table[x_][y_].length() - 1) == '#')
+					//产生式为空，直接弹出栈顶符号即可
+					out << setw(10) << table[x_][y_] << endl;
+				else {
+					for (int i = table[x_][y_].length() - 1; i > 4; i--) {
+						//把产生式逆向压栈
+						stack.push(table[x_][y_].at(i));
+					}
+					out << setw(10) << table[x_][y_] << endl;
+				}
+			}
+			else
+				Error(out, stack, ip, false);
+		}
+	}//while
+	out << setw(10) << "SUCCESS!" << endl;
+}
+
 int main(void) {
 	//vector<char> follow;
 	ofstream fout_table("out_table.txt");
 	ofstream fout_process("out_process.txt");
 	string table[MAX_X][MAX_Y]; //分析表
+	vector<string> proc;		//产生式序列
+	string w;
+
+	cout << "请输入想要分析的字符串：" << endl;
+	cin >> w;
+
 	MakeTable(table);
 	PrintTable(fout_table, table);
+	DoLL1(fout_process, proc, w, table);
+
 	fout_table.close();
 	fout_process.close();
 	system("pause");
