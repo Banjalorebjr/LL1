@@ -194,7 +194,7 @@ void PrintTable(ofstream& out, string table[][MAX_Y]) {
 	}
 }
 
-void Error(ofstream &out, stack<char>& stack, vector<char>::iterator& ip, bool isT) {
+bool  Error(ofstream &out, stack<char>& stack, vector<char>::iterator& ip, bool isT) {
 	if (isT) {
 		//栈顶符号是终结符
 		stack.pop();
@@ -204,8 +204,11 @@ void Error(ofstream &out, stack<char>& stack, vector<char>::iterator& ip, bool i
 		if (*ip != '$') {
 			ip--;
 		}
-	}
+		else 
+			return false;
+	}	
 	out << setw(10) << "ERROR" << endl;
+	return true;
 }
 
 //构造LL(1)预测分析程序
@@ -218,6 +221,7 @@ void DoLL1(ofstream &out, vector<string> & proc, string w, string const table[][
 	vector<char>::iterator ip = buffer.end() - 1;	//ip指向输入缓冲区第一个符号
 	char x = stack.top();				//初始化x指向栈顶元素；top()不弹出栈顶元素
 	char a = *ip;						//初始化a为ip所指向的输入符号
+	bool issuccess = true;
 
 	while (x != '$') {
 		x = stack.top();
@@ -231,6 +235,7 @@ void DoLL1(ofstream &out, vector<string> & proc, string w, string const table[][
 				if (ip != buffer.begin()) ip--;
 			}
 			else {
+				issuccess = false;
 				Error(out, stack, ip, true);
 			}
 		}
@@ -276,10 +281,16 @@ void DoLL1(ofstream &out, vector<string> & proc, string w, string const table[][
 				}
 			}
 			else
-				Error(out, stack, ip, false);
+				if (!Error(out, stack, ip, false)) {
+					issuccess = false;
+					return;
+				}
 		}
 	}//while
-	out << setw(10) << "SUCCESS!" << endl;
+	if (issuccess)
+		out << setw(10) << "SUCCESS!" << endl;
+	else
+		out << setw(10) << "FAIL!" << endl;
 }
 
 int main(void) {
